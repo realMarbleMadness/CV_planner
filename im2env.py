@@ -134,7 +134,7 @@ def composeEnv(obstacles, row, col):
             o_dict = {'type': o.type,
                       'x': (o.cx*o.x_scale + o.cbx) / 1000,
                       'y': (o.cy*o.y_scale + o.cby) / 1000,
-                      'angle': o.angle,
+                      'rotation': o.angle,
                       'width': w*o.x_scale / 1000,
                       'height': h*o.y_scale / 1000}
             o_list.append(o_dict)
@@ -323,7 +323,7 @@ def to_planner(imgs):
     for k in range(env['n_obstacles']):
         init_x = env['obstacles'][k]['x']  #test
         init_y = env['obstacles'][k]['y']  #test
-        init_angle = env['obstacles'][k]['angle']
+        init_angle = env['obstacles'][k]['rotation']
         init = np.array([init_x, init_y,  dist_z, 1])
         #init = np.dot(H_now,init)
         init = CamToBax(init)

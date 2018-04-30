@@ -140,7 +140,7 @@ def composeEnv(obstacles, row, col):
             o_list.append(o_dict)
 
     # bounds
-    bounds = {'x': [-x_bound/2, x_bound/2], 'y': [-y_bound/2, y_bound/2], 'rotation': [np.pi/2*10, 3*np.pi/2*10]}  # make sure the angles are good
+    bounds = {'x': [-x_bound/2, x_bound/2], 'y': [-y_bound/2, y_bound/2], 'rotation': [np.pi/2, 3*np.pi/2]}  # make sure the angles are good
     global_dict['bounds'] = bounds
     # obstacles
     global_dict['obstacles'] = o_list

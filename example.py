@@ -44,11 +44,18 @@ class Baxter_IK(object):
         gripper_action = []
         for oi, of in zip(init_obs, final_obs):
             # trimming the last one for now
+
+            # just trust it!
+            oi[0] += 0.005
+            of[0] += 0.005
+            oi[2] += 0.075
+            of[2] += 0.075
+            
             oi = oi[:-1].tolist()
             of = of[:-1].tolist()
             
             pose_start = [0.835162615786, 0.00508696410378, 0.409410184983] + self.hook_up
-            oi[0] = 0.88
+            # oi[0] = 0.88
             pose_Li = [oi[0]-0.1] + oi[1:] + self.hook_up
             # pose_Li[2] += 0.4
             # pose_Li[1] += 0.1

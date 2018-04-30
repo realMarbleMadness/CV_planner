@@ -12,6 +12,7 @@ import Cali_Cam as cc
 import im2env 
 import pdb
 
+from copy import deepcopy as copy
 import quaternion
 #from baxter_tools import tuck_arms
 
@@ -23,11 +24,13 @@ class Baxter_IK(object):
     def __init__(self):
         self.planner = BaxterInterfacePlanner('left')
 
-        # quaternions for the end effector
-        self.hook_up = [-0.50279713167, 0.439115525177, -0.503707035483, 0.548317264308]
-        self.hook_down = [0.502106700973, 0.516845017147, 0.532957371384, 0.44352737162]
-        self.hook_left = [0.703867943158, 0.0439191618412, 0.708933206651, -0.00739826497198]
-        self.hook_right = [-0.0163754827529, 0.717149782385, 0.0494403950619, 0.694970273124]
+        # quaternions for the end effector. Comments are quaternions converted to roll, pitch, yaw (Euler angles)
+        self.hook_up = [-0.50279713167, 0.439115525177, -0.503707035483, 0.548317264308] # [-0.11168128,  1.46367804,  4.73751126]
+        self.hook_down = [0.502106700973, 0.516845017147, 0.532957371384, 0.44352737162] #[-0.0465213 ,  1.6733205 ,  1.49358146]
+        self.hook_left = [0.703867943158, 0.0439191618412, 0.708933206651, -0.00739826497198] #[-0.07238247,  1.57982682,  0.0513615 ]
+        self.hook_right = [-0.0163754827529, 0.717149782385, 0.0494403950619, 0.694970273124] #[0.09238971, 1.60429892, 3.09631993]
+
+        #example: hookLeft = quaternion.as_euler_angles(quaternion.as_quat_array(np.array(<quaternion>)))
 
         # L shaped arm configuration
         # must append a quaternion to the end of it
@@ -43,8 +46,10 @@ class Baxter_IK(object):
         Returns:
             list of float -- the 1*4 python list of quarternions
         """
-
-        return quaternion.as_float_array(quaternion.from_euler_angles(0, np.pi, euler_z))
+        print 'wrist angle (rads):',euler_z
+        desiredQuat = quaternion.as_float_array(quaternion.from_euler_angles(0, np.pi/2, euler_z)).tolist()
+        print 'desired quat: ', desiredQuat
+        return desiredQuat
 
 
     def execute_trajectory(self, init_obs, final_obs): 
@@ -52,6 +57,14 @@ class Baxter_IK(object):
         init_obs -> initial obstacle positon, for now, just one, list
         final_obstacle -> final obstacle positon, for now, just one, list
         '''
+
+        # TODO
+        # constraint the angle coming from optimizer to -pi/2 to pi/2
+        # the block orientation is 90 degrees out of phase, ex: if a block is at 0 dgrees, need claws at 90 degrees to grab it
+
+
+        testquat = [2.819154132497404e-17, 0.8877101178652074, 0.46040280911364956, 5.435656772071729e-17]
+
 
         pose_start = []
         pose_action = []
@@ -65,47 +78,30 @@ class Baxter_IK(object):
             oi[2] += 0.075
             of[2] += 0.075
             
+            final_angle = of[3]            
             oi = oi[:-1].tolist()
             of = of[:-1].tolist()
-            
+
             # TODO: replace the hardcoded hook_up to use getQuarternion
 
             pose_start = [0.835162615786, 0.00508696410378, 0.409410184983] + self.hook_up
-            # oi[0] = 0.88
-            pose_Li = [oi[0]-0.1] + oi[1:] + self.hook_up
-            # pose_Li[2] += 0.4
-            # pose_Li[1] += 0.1
-            # pose_Li[2] = pose_Li[2]
-            pose_Lf = [of[0]-0.1] + of[1:] + self.hook_up
-            # pose_Li[2] = pose_Li[2]
+    
+            pose_Li = [oi[0]-0.1] + oi[1:] + self.hook_up #intermediate pose
+            pose_Lf = [of[0]-0.1] + of[1:] + self.hook_up #final pose
             
             pose_init = oi + self.hook_up
-            # pose_init[2] += 0.4
-            # pose_init[1] += 0.1
-            pose_final = of + self.hook_up
-            # pose_final[2] += 0.4
-            # pose_init[1] += 0.1
+            pose_final = of + self.getQuarternion(final_angle)
 
-            pose_action += [pose_start, pose_Li, pose_init, pose_Li, pose_Lf, pose_final, pose_final, pose_Lf]
-            gripper_action += [100, 100, 0, 0, 0, 0, 100, 100] 
-            # pdb.set_trace()
+            pose_fb = copy(pose_final)  # move 10 cm away from the final pose
+            pose_fb[0] -= 0.1
 
-
-
+            pose_action += [pose_start, pose_Li, pose_init, pose_Li, pose_Lf, pose_final, pose_final, pose_fb, pose_Lf]
+            gripper_action += [100, 100, 0, 0, 0, 0, 100, 100, 100] 
 
         # if check_limits(pose_action):
         #     print "waypoint out of bounds"    
         # else:
 
-        #return it to the start position
-        # pose_action += [0.647337088674, 0.498833860267, 0.301081012295] + self.hook_up
-        # pose_action += [100]
-        #pose_action += [[0.969264823977, 0.527207560657, 0.496214967195] + self.hook_up]
-        #gripper_action += [0]
-
-        # print 'trajectory: ', pose_action
-        # print 'gripper action: ', gripper_action  
-        #pdb.set_trace()   	
         waypoint_list = zip(pose_action, gripper_action)
         self.planner.ik_joint_and_gripper_plan_execution(waypoint_list)
         return 0
@@ -183,3 +179,17 @@ if __name__ == '__main__':
     # y: 0.480571374262
     # z: -0.539562793204
     # w: 0.521004627289
+
+
+    #return it to the start position
+# pose_action += [0.647337088674, 0.498833860267, 0.301081012295] + self.hook_up
+# pose_action += [100]
+#pose_action += [[0.969264823977, 0.527207560657, 0.496214967195] + self.hook_up]
+#gripper_action += [0]
+
+# print 'trajectory: ', pose_action
+# print 'gripper action: ', gripper_action  
+#pdb.set_trace()    
+
+
+    [0.696196812113,0.187203255955, 0.689617017459, 0.0685077294556]

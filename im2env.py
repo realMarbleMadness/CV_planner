@@ -140,7 +140,7 @@ def composeEnv(obstacles, row, col):
             o_list.append(o_dict)
 
     # bounds
-    bounds = {'x': [-x_bound/2, x_bound/2], 'y': [-y_bound/2, y_bound/2], 'rotation': [0, 31.4159265359]}
+    bounds = {'x': [-x_bound/2, x_bound/2], 'y': [-y_bound/2, y_bound/2], 'rotation': [np.pi/2*10, 3*np.pi/2*10]}  # make sure the angles are good
     global_dict['bounds'] = bounds
     # obstacles
     global_dict['obstacles'] = o_list
@@ -150,7 +150,8 @@ def composeEnv(obstacles, row, col):
 
     # ball
     ball = {'radius': 0.01,
-            'location': [-x_bound/4, y_bound/2], 'linear_velocity': [0.1, -0.05]}
+            # 'location': [-x_bound/4, y_bound/2], 'linear_velocity': [0.1, -0.05]}
+            'location': [0, y_bound/2], 'linear_velocity': [0, 0]}
     global_dict['ball'] = ball
 
     return global_dict
@@ -176,7 +177,7 @@ def c2b(cp, bp):
                            [0, 1, 0, bp[1]-chris[1]],
                            [0, 0, 1, bp[2]-chris[2]],
                            [0, 0, 0, 1]])
-    pdb.set_trace()
+    #pdb.set_trace()
     return np.dot(test_trans,test_rot)
 
 
@@ -298,7 +299,7 @@ def fitRectangles(pic, visualize=False):
 def to_planner(imgs):
 
     environment, H = fitRectangles(imgs, visualize=True)
-    pdb.set_trace()
+    #pdb.set_trace()
     pprint.pprint(environment)
 
     baxPose = np.array([0.969264823977, 0.527207560657, 0.492939894595, 1])
@@ -329,7 +330,7 @@ def to_planner(imgs):
         init[3] = init_angle
         init_obs.append(init)
     
-    pdb.set_trace()
+    #pdb.set_trace()
 
     r = requests.post('http://localhost:5000/getpose', json=environment)
     pprint.pprint(r.json())
@@ -340,14 +341,14 @@ def to_planner(imgs):
     for i in range(end_env['n_obstacles']):
         final_x = end_env['obstacles'][i]['x']  #test
         final_y = end_env['obstacles'][i]['y']  #test
-        final_angle = end_env['obstacles'][i]['rotation']
+        final_angle = end_env['obstacles'][i]['rotation'] + np.pi/2
         final =  np.array([final_x, final_y,  dist_z, 1])
         #final = np.dot(H_now,final)
         final = CamToBax(final)
         final[3] = final_angle
         end_obs.append(final)
     
-    pdb.set_trace()
+    #pdb.set_trace()
    
     return init_obs, end_obs
 

@@ -3,7 +3,6 @@ import rospy
 
 import numpy as np
 import cv2 as cv
-import tensorflow as tf
 import baxter_interface
 
 from plans import BaxterInterfacePlanner
@@ -12,6 +11,8 @@ from moveit_commander.conversions import list_to_pose, pose_to_list
 import Cali_Cam as cc
 import im2env 
 import pdb
+
+import quaternion
 #from baxter_tools import tuck_arms
 
 from config import Config
@@ -30,7 +31,20 @@ class Baxter_IK(object):
 
         # L shaped arm configuration
         # must append a quaternion to the end of it
-        self.L_shape = [0.734563160617, 0.69072462064, 0.450152531088] 
+        self.L_shape = [0.734563160617, 0.69072462064, 0.450152531088]
+
+
+    def getQuarternion(self, euler_z):
+        """get the list of quarternion based on euler z angle
+        
+        Arguments:
+            euler_z {float} -- z angle. For example, hook_up is 3*pi/2, hook_down is pi/2, hook_left is 0, and hook_right is pi
+        
+        Returns:
+            list of float -- the 1*4 python list of quarternions
+        """
+
+        return quaternion.as_float_array(quaternion.from_euler_angles(0, np.pi, euler_z))
 
 
     def execute_trajectory(self, init_obs, final_obs): 
@@ -54,6 +68,8 @@ class Baxter_IK(object):
             oi = oi[:-1].tolist()
             of = of[:-1].tolist()
             
+            # TODO: replace the hardcoded hook_up to use getQuarternion
+
             pose_start = [0.835162615786, 0.00508696410378, 0.409410184983] + self.hook_up
             # oi[0] = 0.88
             pose_Li = [oi[0]-0.1] + oi[1:] + self.hook_up

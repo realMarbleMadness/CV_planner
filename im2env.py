@@ -125,7 +125,7 @@ def composeEnv(obstacles, row, col):
         # destination
         if o.type == 'goal':
             destination = {'x': (o.cx*o.x_scale + o.cbx) / 1000,  # x is good
-                           'y': -(o.cy*o.y_scale + o.cby) / 1000,  # y is actually bottom left, not top left
+                           'y': (o.cy*o.y_scale + o.cby) / 1000,  # y is actually bottom left, not top left
                            'width': w*o.x_scale / 1000,
                            'height': h*o.y_scale / 1000}
             global_dict['destination'] = destination
@@ -133,7 +133,7 @@ def composeEnv(obstacles, row, col):
             # i know cx and cy is a better name but let me test this first
             o_dict = {'type': o.type,
                       'x': (o.cx*o.x_scale + o.cbx) / 1000,
-                      'y': -(o.cy*o.y_scale + o.cby) / 1000,
+                      'y': (o.cy*o.y_scale + o.cby) / 1000,
                       'angle': o.angle,
                       'width': w*o.x_scale / 1000,
                       'height': h*o.y_scale / 1000}
@@ -176,34 +176,34 @@ def c2b(cp, bp):
                            [0, 1, 0, bp[1]-chris[1]],
                            [0, 0, 1, bp[2]-chris[2]],
                            [0, 0, 0, 1]])
-
+    pdb.set_trace()
     return np.dot(test_trans,test_rot)
 
 
 
 
-# def CamToBax(camPose):
+def CamToBax(camPose):
 
-#     test_rot = np.array([[0, 0, 1, 0],
-#                          [-1, 0, 0, 0],
-#                          [0, -1, 0, 0],
-#                          [0, 0, 0, 1]])
+    test_rot = np.array([[0, 0, 1, 0],
+                         [-1, 0, 0, 0],
+                         [0, -1, 0, 0],
+                         [0, 0, 0, 1]])
 
-#     # test_trans = np.array([[1, 0, 0, 0.2520],
-#     #                       [0, 1, 0, 0.1133],
-#     #                       [0, 0, 1, 0.3866],
-#     #                       [0, 0, 0, 1]])
+    # test_trans = np.array([[1, 0, 0, 0.2520],
+    #                       [0, 1, 0, 0.1133],
+    #                       [0, 0, 1, 0.3866],
+    #                       [0, 0, 0, 1]])
 
-#     test_trans = np.array([[1, 0, 0, 0.2520],
-#                            [0, 1, 0, 0.1090],
-#                            [0, 0, 1, 0.330],
-#                            [0, 0, 0, 1]])
+    test_trans = np.array([[1, 0, 0, 0.2520],
+                           [0, 1, 0, 0.1090],
+                           [0, 0, 1, 0.330],
+                           [0, 0, 0, 1]])
 
-#     result = np.dot(test_trans, np.dot(test_rot, camPose))
-#     #print ('theirs')
-#     #pdb.set_trace()
+    result = np.dot(test_trans, np.dot(test_rot, camPose))
+    #print ('theirs')
+    #pdb.set_trace()
 
-#     return result
+    return result
 
 
 
@@ -298,6 +298,7 @@ def fitRectangles(pic, visualize=False):
 def to_planner(imgs):
 
     environment, H = fitRectangles(imgs, visualize=True)
+    pdb.set_trace()
     pprint.pprint(environment)
 
     baxPose = np.array([0.969264823977, 0.527207560657, 0.492939894595, 1])
@@ -307,7 +308,12 @@ def to_planner(imgs):
     cbx = H[0, 3]/1000
     cby = H[1, 3]/1000
 
-    H_now = c2b([cbx, cby, dist_z, 1], baxPose)
+    #H_now = c2b([cbx, cby, dist_z, 1], baxPose)
+    H_now = np.array([[0, 0, 1, 0.2550],
+                     [-1, 0, 0, 0.1090],
+                     [0, -1, 0, 0.3380],
+                     [0, 0, 0, 1]])
+                
     print 'H_now: ', H_now
 
     # get all the initial positions of the obstacles for picking
@@ -318,10 +324,12 @@ def to_planner(imgs):
         init_y = env['obstacles'][k]['y']  #test
         init_angle = env['obstacles'][k]['angle']
         init = np.array([init_x, init_y,  dist_z, 1])
-        init = np.dot(H_now,init)
+        #init = np.dot(H_now,init)
+        init = CamToBax(init)
         init[3] = init_angle
         init_obs.append(init)
-
+    
+    pdb.set_trace()
 
     r = requests.post('http://localhost:5000/getpose', json=environment)
     pprint.pprint(r.json())
@@ -334,9 +342,12 @@ def to_planner(imgs):
         final_y = end_env['obstacles'][i]['y']  #test
         final_angle = end_env['obstacles'][i]['rotation']
         final =  np.array([final_x, final_y,  dist_z, 1])
-        final = np.dot(H_now,final)
+        #final = np.dot(H_now,final)
+        final = CamToBax(final)
         final[3] = final_angle
         end_obs.append(final)
+    
+    pdb.set_trace()
    
     return init_obs, end_obs
 

@@ -40,30 +40,31 @@ class Baxter_IK(object):
         '''
 
         pose_start = []
-
         pose_action = []
         gripper_action = []
         for oi, of in zip(init_obs, final_obs):
             # trimming the last one for now
             oi = oi[:-1].tolist()
             of = of[:-1].tolist()
-
+            
+            pose_start = [0.835162615786, 0.00508696410378, 0.409410184983] + self.hook_up
+            oi[0] = 0.88
             pose_Li = [oi[0]-0.1] + oi[1:] + self.hook_up
-            pose_Li[2] += 0.4
-            pose_Li[1] += 0.1
+            # pose_Li[2] += 0.4
+            # pose_Li[1] += 0.1
             # pose_Li[2] = pose_Li[2]
             pose_Lf = [of[0]-0.1] + of[1:] + self.hook_up
             # pose_Li[2] = pose_Li[2]
-
+            
             pose_init = oi + self.hook_up
-            pose_init[2] += 0.4
-            pose_init[1] += 0.1
+            # pose_init[2] += 0.4
+            # pose_init[1] += 0.1
             pose_final = of + self.hook_up
-            pose_final[2] += 0.4
-            pose_init[1] += 0.1
+            # pose_final[2] += 0.4
+            # pose_init[1] += 0.1
 
-            pose_action += [pose_Li, pose_init, pose_Li, pose_Lf, pose_final, pose_final, pose_Lf]
-            gripper_action += [100, 0, 0, 0, 0, 100, 100] 
+            pose_action += [pose_start, pose_Li, pose_init, pose_Li, pose_Lf, pose_final, pose_final, pose_Lf]
+            gripper_action += [100, 100, 0, 0, 0, 0, 100, 100] 
             # pdb.set_trace()
 
 

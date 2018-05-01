@@ -62,9 +62,11 @@ class Baxter_IK(object):
         # constraint the angle coming from optimizer to -pi/2 to pi/2
         # the block orientation is 90 degrees out of phase, ex: if a block is at 0 dgrees, need claws at 90 degrees to grab it
 
+        # hardcoded
+        # good1 = [0.973906475074, 0.1325020113011, 0.428958868263, -0.330123932175, 0.621806020151, -0.330189496549, 0.628768923436]
+        # good2 = [0.979623285918, -0.112404040135, 0.297551359068, -0.407706761715, 0.573201935293, -0.424796140795, 0.569879791354]
 
-        testquat = [2.819154132497404e-17, 0.8877101178652074, 0.46040280911364956, 5.435656772071729e-17]
-
+        final_obs = [good2, good1]
 
         pose_start = []
         pose_action = []
@@ -73,8 +75,8 @@ class Baxter_IK(object):
             # trimming the last one for now
 
             # just trust it!
-            oi[0] += 0.005
-            of[0] += 0.005
+            oi[0] += 0.01
+            of[0] += 0.01
             oi[2] += 0.075
             of[2] += 0.075
             
@@ -87,13 +89,14 @@ class Baxter_IK(object):
             pose_start = [0.835162615786, 0.00508696410378, 0.409410184983] + self.hook_up
     
             pose_Li = [oi[0]-0.1] + oi[1:] + self.hook_up #intermediate pose
-            pose_Lf = [of[0]-0.1] + of[1:] + self.hook_up #final pose
+            pose_Lf = [of[0]-0.1] + of[1:3] + self.hook_up #final pose
             
             pose_init = oi + self.hook_up
             pose_final = of + self.getQuarternion(final_angle)
 
             pose_fb = copy(pose_final)  # move 10 cm away from the final pose
             pose_fb[0] -= 0.1
+
 
             pose_action += [pose_start, pose_Li, pose_init, pose_Li, pose_Lf, pose_final, pose_final, pose_fb, pose_Lf]
             gripper_action += [100, 100, 0, 0, 0, 0, 100, 100, 100] 

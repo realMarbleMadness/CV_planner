@@ -125,7 +125,7 @@ def composeEnv(obstacles, row, col):
         # destination
         if o.type == 'goal':
             destination = {'x': (o.cx*o.x_scale + o.cbx) / 1000,  # x is good
-                           'y': (o.cy*o.y_scale + o.cby) / 1000,  # y is actually bottom left, not top left
+                           'y': y_bound/2 - (o.cy*o.y_scale + o.cby) / 1000,  # y is actually bottom left, not top left
                            'width': w*o.x_scale / 1000,
                            'height': h*o.y_scale / 1000}
             global_dict['destination'] = destination
@@ -140,7 +140,7 @@ def composeEnv(obstacles, row, col):
             o_list.append(o_dict)
 
     # bounds
-    bounds = {'x': [-x_bound/2, x_bound/2], 'y': [-y_bound/2, y_bound/2], 'rotation': [3*np.pi/2, 5*np.pi/2]}  # make sure the angles are good
+    bounds = {'x': [-x_bound/2, x_bound/2], 'y': [-y_bound/2, y_bound/2], 'rotation': [3/2*np.pi, 5/2*np.pi]}  # make sure the angles are good
     global_dict['bounds'] = bounds
     # obstacles
     global_dict['obstacles'] = o_list
@@ -151,7 +151,7 @@ def composeEnv(obstacles, row, col):
     # ball
     ball = {'radius': 0.01,
             # 'location': [-x_bound/4, y_bound/2], 'linear_velocity': [0.1, -0.05]}
-            'location': [0, y_bound/3], 'linear_velocity': [0, 0]}
+            'location': [0, y_bound/2], 'linear_velocity': [0, 0]}
     global_dict['ball'] = ball
 
     return global_dict
@@ -295,6 +295,14 @@ def fitRectangles(pic, visualize=False):
 
     return composeEnv(obstacles, row, col), H
 
+
+def normalize_angle(angle):
+    pi = np.pi
+    while angle > 5 * pi / 2:
+        angle -= pi
+    while angle < 3 * pi / 2:
+        angle += pi
+    return angle
 
 def to_planner(imgs):
 

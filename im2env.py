@@ -125,7 +125,7 @@ def composeEnv(obstacles, row, col):
         # destination
         if o.type == 'goal':
             destination = {'x': (o.cx*o.x_scale + o.cbx) / 1000,  # x is good
-                           'y': y_bound/2 - (o.cy*o.y_scale + o.cby) / 1000,  # y is actually bottom left, not top left
+                           'y': - (o.cy*o.y_scale + o.cby) / 1000,  # y is actually bottom left, not top left
                            'width': w*o.x_scale / 1000,
                            'height': h*o.y_scale / 1000}
             global_dict['destination'] = destination
@@ -347,7 +347,7 @@ def to_planner(imgs):
     end_obs = []
     for i in range(end_env['n_obstacles']):
         final_x = end_env['obstacles'][i]['x']  #test
-        final_y = end_env['obstacles'][i]['y']  #test
+        final_y = - end_env['obstacles'][i]['y']  #test
         final_angle = end_env['obstacles'][i]['rotation'] - np.pi/2
         final =  np.array([final_x, final_y,  dist_z, 1])
         final = CamToBax(final)
